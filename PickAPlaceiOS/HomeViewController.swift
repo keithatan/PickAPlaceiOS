@@ -7,17 +7,17 @@
 //
 
 import UIKit
-import CoreLocation
-class HomeViewController: UIViewController, CLLocationManagerDelegate {
 
-    var locationManager:CLLocationManager = CLLocationManager()
-    
+class HomeViewController: UIViewController {
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         print(UserLocation.getLongitude())
 
         // Do any additional setup after loading the view.
     }
+    
 
     @IBAction func chooseFood(_ sender: Any) {
         
