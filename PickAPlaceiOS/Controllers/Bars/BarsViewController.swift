@@ -1,8 +1,8 @@
 //
-//  categoriesTableViewController.swift
+//  BarsViewController.swift
 //  PickAPlaceiOS
 //
-//  Created by Adam Ding on 3/29/19.
+//  Created by Adam Ding on 4/14/19.
 //  Copyright © 2019 keithatan. All rights reserved.
 //
 
@@ -10,36 +10,48 @@ import UIKit
 import AlamofireImage
 import Alamofire
 
-class categoriesTableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FoodCellDelegate
- {
+class BarsViewController: UIViewController , UITableViewDataSource, UITableViewDelegate, BarCellDelegate {
+    
+//
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        print("will fix later")
+//    }
+//
     
     var businesses = [Business]();
     var radius = 0;
     var chosen = [FoodCell]();
     var params = [String]();
-    
-    func didselectRestaurant(cell:FoodCell) {
-        if (chosen.contains(cell) == true){
-            let index = chosen.index(of:cell)
-            chosen.remove(at: index!)
-            cell.deselectCell()
-        }
-        else {
-            if (chosen.count < 3){
-                cell.selectCell()
-                chosen.append(cell)
-            }
-            else {
-                // popup alert here
-                cell.deselectCell()
-            }
-        }
-    }
-
 
     @IBOutlet weak var tableView: UITableView!
-    let navBarHeight = UIApplication.shared.statusBarFrame.size.height  //gets navigation bars height
     
+    func didselectRestaurant(cell: BarCell) {
+        return
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return businesses.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "BarCell") as! BarCell
+        let business = businesses[indexPath.row]
+        
+        cell.delegate = self
+        
+        cell.business = business
+        cell.barNameLabel.text = business.name
+        let imageURL = URL(string: business.image_url)
+        cell.barImage.af_setImage(withURL: imageURL!)
+        
+        return cell
+    }
+
+    
+    
+    let navBarHeight = UIApplication.shared.statusBarFrame.size.height  //gets navigation bars height
+
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.dataSource = self
@@ -54,33 +66,33 @@ class categoriesTableViewController: UIViewController, UITableViewDataSource, UI
         // #warning Incomplete implementation, return the number of sections
         return 1
     }
-    
+
     func retrieveBusinesses(){
-        
+
         let baseURL = "https://api.yelp.com/v3/businesses/search?"
         let latitude = UserLocation.getLatitude()
         let longitude = UserLocation.getLongitude()
         var url = "\(baseURL)latitude=\(latitude)&longitude=\(longitude)&distance=\(self.radius)"
-        
+
         for i in 0..<params.count {
             url = url + "&\(params[i])"
         }
-        
-        Alamofire.request(url, headers: ["Authorization": "Bearer qTudr1OHb2yp_BLjG5-Ql3FtZUTLIGgOZZSCGt9ckkQkiB_h1-djmLJXusaPhZrR2FIHrNAsnhzg2oJZMHjNMmS_fpM4mmrjh88VmX5nNeSI3AXu5DI_2v372JbKW3Yx"]).responseJSON { (response) in
+
+        Alamofire.request(url, headers: ["Authorization": "API-KEY"]).responseJSON { (response) in
             if let error = response.error{
                 print(error.localizedDescription)
                 return
             }
-            
+
             guard let data = response.data else {
                 return
             }
-            
+
             do {
                 let jsonDecoder = JSONDecoder()
                 let wrapper = try jsonDecoder.decode(BusinessWrapper.self, from: data)
                 self.businesses = wrapper.businesses
-                
+
                 var repeats: [Int: Bool] = [:]
                 while repeats.count != 5 {  //gets 5 indexes for 5 random restaurants
                     let random = Int.random(in: 0 ..< self.businesses.count)
@@ -101,44 +113,24 @@ class categoriesTableViewController: UIViewController, UITableViewDataSource, UI
         }
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return businesses.count
-    }
-
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "FoodCell") as! FoodCell
-        let business = businesses[indexPath.row]
-        
-        cell.delegate = self
-        
-        cell.business = business
-        cell.restaurantNameLabel.text = business.name
-        let imageURL = URL(string: business.image_url)
-        cell.restaurantImage.af_setImage(withURL: imageURL!)
-        
-        return cell
-    }
-    
     public var screenWidth: CGFloat {   //gets width of screen
         return UIScreen.main.bounds.width
     }
-    
+
     public var screenHeight: CGFloat {  //gets height of screen
         return UIScreen.main.bounds.height
     }
-    
+
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //Change the selected background view of the cell.
         tableView.deselectRow(at: indexPath, animated: true)
     }
-    
+
     func chooseDestination() -> Business{
         let number = Int.random(in: 0 ... 2)
         return chosen[number].business
     }
-    
+
     @IBAction func submitChoices(_ sender: Any) {
         if (chosen.count < 3){
             // popup error goes here
@@ -153,33 +145,33 @@ class categoriesTableViewController: UIViewController, UITableViewDataSource, UI
             let cellBusiness = chooseDestination()
             let chosenViewController = segue.destination as! ChosenViewController
             chosenViewController.business = cellBusiness
-            
+
         }
         else {
             // Get the new view controller using segue.destination.
             // Pass the selected object to the new view controller.
-            
+
             // Identify selected movie cell
             let cell = sender as! UITableViewCell
-            
+
             // Gets the index of that cell because the tableview knows the index for a cell
             let indexPath = tableView.indexPath(for: cell)!
-            
+
             let business = businesses[indexPath.row]
-            
+
             // Identify the destination
             // Must cast because the destination is a generic VC
             let foodDetailViewController = segue.destination as! FoodViewController
-            
+
             // Bundle the movie information to the next screen
-            
+
             foodDetailViewController.business = business;
-            
+
             // Deselect while traveling to the next screen
-            
+
             tableView.deselectRow(at: indexPath, animated: true)
         }
-        
+    
         
     }
 
